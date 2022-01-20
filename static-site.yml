@@ -1,4 +1,4 @@
-AWSTemplateFormatVersion: "2010-09-09"
+AWSTemplateFormatVersion: 2010-09-09
 Description: Infrastructure for a static site
 Parameters:
   BucketName:
@@ -9,8 +9,11 @@ Resources:
   S3Bucket:
     Type: "AWS::S3::Bucket"
     Properties: 
-      AccessControl: "PublicRead"
-      BucketName: !Ref BucketName
+      AccessControl: Private
+      BucketName: !Join
+        - '-'
+        - - !Ref BucketName
+          - !Ref AWS::AccountId
       WebsiteConfiguration:
         IndexDocument: index.html
         ErrorDocument: 404.html
@@ -19,3 +22,4 @@ Outputs:
   WebsiteURL:
     Value: !GetAtt S3Bucket.WebsiteURL
     Description: URL for website hosted on S3
+
