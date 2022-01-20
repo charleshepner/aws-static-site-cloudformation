@@ -1,0 +1,21 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Description: Infrastructure for a static site
+Parameters:
+  BucketName:
+    Type: String
+    Default: static-site-cf
+    Description: S3 Bucket Name
+Resources:
+  S3Bucket:
+    Type: "AWS::S3::Bucket"
+    Properties: 
+      AccessControl: "PublicRead"
+      BucketName: !Ref BucketName
+      WebsiteConfiguration:
+        IndexDocument: index.html
+        ErrorDocument: 404.html
+    DeletionPolicy: Retain
+Outputs:
+  WebsiteURL:
+    Value: !GetAtt S3Bucket.WebsiteURL
+    Description: URL for website hosted on S3
