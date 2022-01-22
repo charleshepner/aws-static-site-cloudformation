@@ -4,20 +4,49 @@ Parameters:
   BucketName:
     Type: String
     Default: static-site-cf
-    Description: S3 Bucket Name
+    Description: Enter the name of the S3 bucket.
+  DomainName:
+    Type: String
+    Description: Enter the domain name for the static site.
+  SubdomainName:
+    Type: String
+    Description: Enter the subdomain name for the static site.
 Resources:
   S3Bucket:
     Type: "AWS::S3::Bucket"
     Properties: 
       AccessControl: Private
+      # S3 bucket names are in a global namespace, so append the account number
+      # to make it unlikely that the name is already in use
       BucketName: !Join
-        - '-'
+        - "-"
         - - !Ref BucketName
           - !Ref AWS::AccountId
       WebsiteConfiguration:
         IndexDocument: index.html
         ErrorDocument: 404.html
     DeletionPolicy: Retain
+  DNSRecord:
+    Type: "AWS::Route53::RecordSet"
+    Properties:
+      Comment: CNAME record for static site hosted on S3.
+      # CloudFormation requires this property to include a trailing '.'
+      HostedZoneName: !Sub
+        - "${DomainName}."
+        - DomainName: !Ref DomainName
+      Name: !Join
+        - "."
+        - - !Ref SubdomainName
+          - !Ref DomainName
+      # Remove "http://" from the beginning of the URL
+      ResourceRecords:
+        - !Select
+          - "1"
+          - !Split
+            - "//"
+            - !GetAtt S3Bucket.WebsiteURL
+      TTL: 900
+      Type: CNAME
 Outputs:
   WebsiteURL:
     Value: !GetAtt S3Bucket.WebsiteURL
